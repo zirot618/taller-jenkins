@@ -15,13 +15,13 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                bat 'pip install -r requirements.txt'
+                sh 'pip install -r requirements.txt'
             }
         }
 
         stage('Code Style (pre-commit)') {
             steps {
-                bat '''
+                sh '''
                     pip install pre-commit
                     pre-commit run --all-files
                 '''
@@ -30,7 +30,7 @@ pipeline {
 
         stage('Run Unit Tests') {
             steps {
-                bat 'pytest --maxfail=1 --disable-warnings'
+                sh 'pytest --maxfail=1 --disable-warnings'
             }
         }
 
