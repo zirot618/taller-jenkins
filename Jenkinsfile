@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/zirot618/taller-jenkins.git'
+                git branch: 'main', url: 'https://github.com/zirot618/taller-jenkins.git'
             }
         }
 
