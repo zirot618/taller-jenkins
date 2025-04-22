@@ -7,12 +7,14 @@ pipeline {
     VENV = "${WORKSPACE}\\venv"
   }
 
-  stages {
-    stage('Check Python Version') {
-      steps {
-        sh '"C:\\Users\\USUARIO\\AppData\\Local\\Programs\\Python\\Python313\\python.exe" --version'
-      }
+  stage('Check Python Version') {
+    steps {
+        sh 'python3 --version'
     }
+}
+
+
+ 
 
     stage('Clonar repositorio') {
       steps {
@@ -94,4 +96,3 @@ pipeline {
     //   }
     // }
   }
-}
