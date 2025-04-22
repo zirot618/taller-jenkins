@@ -1,12 +1,9 @@
-"""Aca modifique lo del jenkins añadiendo esto : 
-Checkout del código, instalación de las dependencias, ejecución de las pruebas unitarias, construcción de la imagen Docker, login a DockerHub y el push de la imagen a DockerHub"""
-
 pipeline {
     agent any
 
     environment {
         DOCKER_IMAGE = 'zirot618/taller-jenkins'
-        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials' // ID de las credenciales en Jenkins
+        DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
     }
 
     stages {
@@ -22,9 +19,18 @@ pipeline {
             }
         }
 
+        stage('Code Style (pre-commit)') {
+            steps {
+                sh '''
+                    pip install pre-commit
+                    pre-commit run --all-files
+                '''
+            }
+        }
+
         stage('Run Unit Tests') {
             steps {
-                sh 'pytest'
+                sh 'pytest --maxfail=1 --disable-warnings'
             }
         }
 
@@ -36,17 +42,7 @@ pipeline {
             }
         }
 
-        stage('Login to DockerHub') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKERHUB_CREDENTIALS}") {
-                        echo 'Autenticado correctamente en DockerHub'
-                    }
-                }
-            }
-        }
-
-        stage('Push to DockerHub') {
+        stage('Login to DockerHub and Push') {
             steps {
                 script {
                     docker.withRegistry('https://index.docker.io/v1/', "${DOCKERHUB_CREDENTIALS}") {
@@ -59,10 +55,10 @@ pipeline {
 
     post {
         failure {
-            echo 'El pipeline falló. Verifica los logs.'
+            echo '❌ El pipeline falló. Verifica los logs.'
         }
         success {
-            echo 'Pipeline ejecutado correctamente. Imagen publicada en DockerHub.'
+            echo '✅ Pipeline ejecutado correctamente. Imagen publicada en DockerHub.'
         }
     }
 }

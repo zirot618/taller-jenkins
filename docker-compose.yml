@@ -1,6 +1,7 @@
 version: "3.9"
 services:
   api:
+    container_name: fastapi-api
     build: .
     ports:
       - "8000:8000"
@@ -9,6 +10,7 @@ services:
     environment:
       - SERVER_URL=http://mockoon:4000/user_type
   mockoon:
+    container_name: mockoon-server
     image: mockoon/cli
     command: -d /data/mockoon.json
     volumes:
