@@ -3,18 +3,16 @@ pipeline {
 
   environment {
     SONARQUBE_SERVER = 'sonarqube'
-    SONAR_SCANNER_HOME = 'C:\\sonarqube\\sonarqube-25.4.0.105899\\bin\\windows-x86-64'  // Cambia esto a la ruta real en tu Windows
-    VENV = "${WORKSPACE}\\venv"
+    VENV = "${WORKSPACE}/venv"
   }
 
-  stage('Check Python Version') {
-    steps {
+  stages {
+
+    stage('Check Python Version') {
+      steps {
         sh 'python3 --version'
+      }
     }
-}
-
-
- 
 
     stage('Clonar repositorio') {
       steps {
@@ -25,10 +23,10 @@ pipeline {
     stage('Instalar dependencias') {
       steps {
         sh """
-          "C:\\Users\\USUARIO\\AppData\\Local\\Programs\\Python\\Python313\\python.exe" -m venv %VENV%
-          call %VENV%\\Scripts\\activate.bat
-          "%VENV%\\Scripts\\pip.exe" install --upgrade pip
-          "%VENV%\\Scripts\\pip.exe" install -r requirements.txt
+          python3 -m venv $VENV
+          source $VENV/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
         """
       }
     }
@@ -36,8 +34,8 @@ pipeline {
     stage('Pruebas unitarias') {
       steps {
         sh """
-          call %VENV%\\Scripts\\activate.bat
-          "%VENV%\\Scripts\\pytest.exe" --maxfail=1 --disable-warnings --quiet
+          source $VENV/bin/activate
+          pytest --maxfail=1 --disable-warnings --quiet
         """
       }
     }
@@ -53,9 +51,7 @@ pipeline {
     stage('Login to DockerHub') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          sh """
-            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% -p %DOCKER_PASS%
-          """
+          sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
         }
       }
     }
@@ -71,28 +67,31 @@ pipeline {
     stage('Lint') {
       steps {
         sh """
-          call %VENV%\\Scripts\\activate.bat
+          source $VENV/bin/activate
           pip install pylint
-          pylint src --output-format=json > pylint-report.json || exit 0
+          pylint src --output-format=json > pylint-report.json || true
         """
       }
     }
 
+    // Si estás usando SonarQube en Linux también, descomenta y ajusta esto:
     // stage('Análisis SonarQube') {
     //   steps {
     //     withSonarQubeEnv("${SONARQUBE_SERVER}") {
     //       withCredentials([string(credentialsId: 'sonarqube_auth_token', variable: 'SONAR_TOKEN')]) {
-    //         bat """
-    //           "${SONAR_SCANNER_HOME}\\StartSonar.bat" ^
-    //             -Dsonar.projectKey=my-python-app ^
-    //             -Dsonar.sources=src ^
-    //             -Dsonar.host.url=http://sonarqube:9000 ^
-    //             -Dsonar.token=%SONAR_TOKEN% ^
-    //             -Dsonar.python.coverage.reportPaths=coverage.xml ^
+    //         sh """
+    //           sonar-scanner \
+    //             -Dsonar.projectKey=my-python-app \
+    //             -Dsonar.sources=src \
+    //             -Dsonar.host.url=http://sonarqube:9000 \
+    //             -Dsonar.token=$SONAR_TOKEN \
+    //             -Dsonar.python.coverage.reportPaths=coverage.xml \
     //             -Dsonar.python.pylint.reportPaths=pylint-report.json
     //         """
     //       }
     //     }
     //   }
     // }
+
   }
+}
