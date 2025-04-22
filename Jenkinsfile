@@ -3,14 +3,14 @@ pipeline {
 
   environment {
     SONARQUBE_SERVER = 'sonarqube'
-    VENV = "${WORKSPACE}/venv"
+    SONAR_SCANNER_HOME = 'C:\\sonarqube\\sonarqube-25.4.0.105899\\bin\\windows-x86-64'  // Cambia esto a la ruta real en tu Windows
+    VENV = "${WORKSPACE}\\venv"
   }
 
   stages {
-
     stage('Check Python Version') {
       steps {
-        sh 'python3 --version'
+        bat '"C:\\Users\\USUARIO\\AppData\\Local\\Programs\\Python\\Python313\\python.exe" --version'
       }
     }
 
@@ -22,20 +22,20 @@ pipeline {
 
     stage('Instalar dependencias') {
       steps {
-        sh """
-          python3 -m venv $VENV
-          source $VENV/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
+        bat """
+          "C:\\Users\\USUARIO\\AppData\\Local\\Programs\\Python\\Python313\\python.exe" -m venv %VENV%
+          call %VENV%\\Scripts\\activate.bat
+          "%VENV%\\Scripts\\pip.exe" install --upgrade pip
+          "%VENV%\\Scripts\\pip.exe" install -r requirements.txt
         """
       }
     }
 
     stage('Pruebas unitarias') {
       steps {
-        sh """
-          source $VENV/bin/activate
-          pytest --maxfail=1 --disable-warnings --quiet
+        bat """
+          call %VENV%\\Scripts\\activate.bat
+          "%VENV%\\Scripts\\pytest.exe" --maxfail=1 --disable-warnings --quiet
         """
       }
     }
@@ -43,7 +43,7 @@ pipeline {
     stage('Construir imagen Docker') {
       steps {
         script {
-          dockerImage = docker.build("javierlopez618/clase10-tallercd")
+          dockerImage = docker.build("javierlopez618/clase10tallercd")
         }
       }
     }
@@ -51,7 +51,9 @@ pipeline {
     stage('Login to DockerHub') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
+          bat """
+            echo %DOCKER_PASS% | docker login -u %DOCKER_USER% -p %DOCKER_PASS%
+          """
         }
       }
     }
@@ -59,39 +61,37 @@ pipeline {
     stage('Push to DockerHub') {
       steps {
         script {
-          docker.image('javierlopez618/clase10-tallercd').push()
+          docker.image('javierlopez618/clase10tallercd').push()
         }
       }
     }
 
     stage('Lint') {
       steps {
-        sh """
-          source $VENV/bin/activate
+        bat """
+          call %VENV%\\Scripts\\activate.bat
           pip install pylint
-          pylint src --output-format=json > pylint-report.json || true
+          pylint src --output-format=json > pylint-report.json || exit 0
         """
       }
     }
 
-    // Si estás usando SonarQube en Linux también, descomenta y ajusta esto:
     // stage('Análisis SonarQube') {
     //   steps {
     //     withSonarQubeEnv("${SONARQUBE_SERVER}") {
     //       withCredentials([string(credentialsId: 'sonarqube_auth_token', variable: 'SONAR_TOKEN')]) {
-    //         sh """
-    //           sonar-scanner \
-    //             -Dsonar.projectKey=my-python-app \
-    //             -Dsonar.sources=src \
-    //             -Dsonar.host.url=http://sonarqube:9000 \
-    //             -Dsonar.token=$SONAR_TOKEN \
-    //             -Dsonar.python.coverage.reportPaths=coverage.xml \
+    //         bat """
+    //           "${SONAR_SCANNER_HOME}\\StartSonar.bat" ^
+    //             -Dsonar.projectKey=my-python-app ^
+    //             -Dsonar.sources=src ^
+    //             -Dsonar.host.url=http://sonarqube:9000 ^
+    //             -Dsonar.token=%SONAR_TOKEN% ^
+    //             -Dsonar.python.coverage.reportPaths=coverage.xml ^
     //             -Dsonar.python.pylint.reportPaths=pylint-report.json
     //         """
     //       }
     //     }
     //   }
     // }
-
   }
 }
