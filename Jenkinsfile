@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Instalar dependencias') {
             steps {
-                bat '''
+                sh '''
                     python -m venv venv
                     call venv\\Scripts\\activate
                     python -m pip install --upgrade pip
@@ -20,7 +20,7 @@ pipeline {
 
         stage('Run Unit Tests') {
             steps {
-                bat '''
+                sh '''
                     call venv\\Scripts\\activate
                     pytest --maxfail=1 --disable-warnings
                 '''
