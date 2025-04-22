@@ -1,8 +1,5 @@
 pipeline {
     agent {
-        docker {
-            image 'python:3.12-slim'
-        }
     }
 
     environment {
@@ -17,9 +14,20 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        """stage('Install Dependencies') {
             steps {
                 sh 'pip install --upgrade pip && pip install -r requirements.txt'
+            }
+        }"""
+
+        stage('Instalar dependencias') {
+            steps {
+                sh """
+                "C:\\Users\\USUARIO\\AppData\\Local\\Programs\\Python\\Python313\\python.exe" -m venv %VENV%
+                call %VENV%\\Scripts\\activate.bat
+                "%VENV%\\Scripts\\pip.exe" install --upgrade pip
+                "%VENV%\\Scripts\\pip.exe" install -r requirements.txt
+            """
             }
         }
 
