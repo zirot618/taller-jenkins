@@ -1,18 +1,11 @@
-# Imagen base ligera de Python 3.12
 FROM python:3.12-slim
 
-FROM jenkins/jenkins:lts
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-USER root
+COPY src ./src
+COPY mockoon.json .
+ENV SERVER_URL=http://mockoon:4000/user_type
 
-# Instala Python 3 y pip
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip && \
-    ln -s /usr/bin/python3 /usr/bin/python && \
-    python3 -m pip install --upgrade pip
-
-# Opcional: instala git si tu Jenkinsfile lo necesita
-RUN apt-get install -y git
-
-# Vuelve al usuario Jenkins
-USER jenkins
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
