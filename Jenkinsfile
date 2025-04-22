@@ -7,18 +7,12 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                git 'https://github.com/zirot618/taller-jenkins.git'
-            }
-        }
-
         stage('Instalar dependencias') {
             steps {
                 bat '''
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install --upgrade pip
+                    python -m venv venv
+                    call venv\\Scripts\\activate
+                    python -m pip install --upgrade pip
                     pip install -r requirements.txt
                 '''
             }
@@ -26,7 +20,10 @@ pipeline {
 
         stage('Run Unit Tests') {
             steps {
-                bat 'pytest --maxfail=1 --disable-warnings'
+                bat '''
+                    call venv\\Scripts\\activate
+                    pytest --maxfail=1 --disable-warnings
+                '''
             }
         }
     }
