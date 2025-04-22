@@ -10,7 +10,7 @@ pipeline {
   stages {
     stage('Check Python Version') {
       steps {
-        bat '"C:\\Users\\USUARIO\\AppData\\Local\\Programs\\Python\\Python313\\python.exe" --version'
+        sh '"C:\\Users\\USUARIO\\AppData\\Local\\Programs\\Python\\Python313\\python.exe" --version'
       }
     }
 
@@ -22,7 +22,7 @@ pipeline {
 
     stage('Instalar dependencias') {
       steps {
-        bat """
+        sh """
           "C:\\Users\\USUARIO\\AppData\\Local\\Programs\\Python\\Python313\\python.exe" -m venv %VENV%
           call %VENV%\\Scripts\\activate.bat
           "%VENV%\\Scripts\\pip.exe" install --upgrade pip
@@ -33,7 +33,7 @@ pipeline {
 
     stage('Pruebas unitarias') {
       steps {
-        bat """
+        sh """
           call %VENV%\\Scripts\\activate.bat
           "%VENV%\\Scripts\\pytest.exe" --maxfail=1 --disable-warnings --quiet
         """
@@ -51,7 +51,7 @@ pipeline {
     stage('Login to DockerHub') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          bat """
+          sh """
             echo %DOCKER_PASS% | docker login -u %DOCKER_USER% -p %DOCKER_PASS%
           """
         }
@@ -68,7 +68,7 @@ pipeline {
 
     stage('Lint') {
       steps {
-        bat """
+        sh """
           call %VENV%\\Scripts\\activate.bat
           pip install pylint
           pylint src --output-format=json > pylint-report.json || exit 0
