@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.12-slim'
-            args '-u root:root'
-        }
-    }
+    agent any
 
     environment {
         DOCKER_IMAGE = 'zirot618/taller-jenkins'
@@ -18,10 +13,10 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Instalar dependencias') {
             steps {
-                sh '''
-                    python -m venv venv
+                bat '''
+                    python3 -m venv venv
                     . venv/bin/activate
                     pip install --upgrade pip
                     pip install -r requirements.txt
@@ -29,36 +24,9 @@ pipeline {
             }
         }
 
-        stage('Code Style (pre-commit)') {
-            steps {
-                sh '''
-                    pip install pre-commit
-                    pre-commit run --all-files
-                '''
-            }
-        }
-
         stage('Run Unit Tests') {
             steps {
-                sh 'pytest --maxfail=1 --disable-warnings'
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    dockerImage = docker.build("${DOCKER_IMAGE}")
-                }
-            }
-        }
-
-        stage('Login to DockerHub and Push') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${DOCKERHUB_CREDENTIALS}") {
-                        dockerImage.push('latest')
-                    }
-                }
+                bat 'pytest --maxfail=1 --disable-warnings'
             }
         }
     }
@@ -68,7 +36,7 @@ pipeline {
             echo '❌ El pipeline falló. Verifica los logs.'
         }
         success {
-            echo '✅ Pipeline ejecutado correctamente. Imagen publicada en DockerHub.'
+            echo '✅ Pipeline ejecutado correctamente.'
         }
     }
 }
