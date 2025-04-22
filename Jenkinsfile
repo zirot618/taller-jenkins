@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.12-slim'
+        }
+    }
 
     environment {
         DOCKER_IMAGE = 'zirot618/taller-jenkins'
@@ -9,13 +13,13 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/zirot618/taller-jenkins.git'
+                git 'https://github.com/zirot618/taller-jenkins.git'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
+                sh 'pip install --upgrade pip && pip install -r requirements.txt'
             }
         }
 
