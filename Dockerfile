@@ -1,25 +1,18 @@
 # Imagen base ligera de Python 3.12
 FROM python:3.12-slim
 
-# Establecer el directorio de trabajo dentro del contenedor
-WORKDIR /app
+FROM jenkins/jenkins:lts
 
-# Copiar archivo de dependencias
-COPY requirements.txt .
+USER root
 
-# Instalar dependencias
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Instala Python 3 y pip
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    ln -s /usr/bin/python3 /usr/bin/python && \
+    python3 -m pip install --upgrade pip
 
-# Copiar el código fuente
-COPY src ./src
+# Opcional: instala git si tu Jenkinsfile lo necesita
+RUN apt-get install -y git
 
-# Copiar archivo de configuración mockoon
-COPY mockoon.json .
-
-# Variable de entorno
-ENV SERVER_URL=http://mockoon:4000/user_type
-
-# Comando para ejecutar la aplicación FastAPI con Uvicorn
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
+# Vuelve al usuario Jenkins
+USER jenkins
